@@ -24,7 +24,7 @@ sugar_vec = interp1(Sugar.Time,Sugar.Data,time_vec,'linear');
 %Find the peaks in the data, this is when the slope changes sign
 [PKS,LOCS] = findpeaks(sugar_vec,time_vec);
 
-%Fine the min and max 
+%Find the min and max 
 min_val = min(sugar_vec);
 max_val = max(sugar_vec);
 
@@ -32,8 +32,14 @@ max_val = max(sugar_vec);
 %response shifted by 160 
 %Produce first order transfer function as output
 s = tf('s');
-TF = -80*(4/(10*60))/(s+4/(10*60));
+TF = -(max_val-min_val)*(4/(10*60))/(s+4/(10*60));
+
 %Produce initial condition (offset from zero)
-IC = 160;
+IC = max_val;
+
+%notes: steady state value = min, initial value/offset = max, 
+%atm my first order system is as accurate as the reference but basically
+%the same as it.
+%A second order system should make it more accurate.
 
 end
