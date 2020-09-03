@@ -32,7 +32,7 @@ max_val = max(sugar_vec);
 %response shifted by 160 
 %Produce first order transfer function as output
 s = tf('s');
-TF = -(max_val-min_val)*(4/(10*60))/(s+4/(10*60));
+TF = -(max_val-min_val)*(4/(600*s+4));
 
 %Produce initial condition (offset from zero)
 IC = max_val;
