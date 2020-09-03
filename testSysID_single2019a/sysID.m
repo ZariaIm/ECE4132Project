@@ -22,7 +22,10 @@ sugar_vec = interp1(Sugar.Time,Sugar.Data,time_vec,'linear');
 % - min/max
 
 %Find the peaks in the data, this is when the slope changes sign
-[PKS,LOCS] = findpeaks(sugar_vec,time_vec);
+[maxPKS,maxLOCS] = findpeaks(sugar_vec,time_vec);
+[minPKS,minLOCS] = findpeaks(-sugar_vec,time_vec);
+minPKS = -minPKS; 
+Ts = max([max(maxLOCS), max(minLOCS)]); %found the last local minima/maxima
 
 %Find the min and max 
 min_val = min(sugar_vec);
@@ -32,14 +35,20 @@ max_val = max(sugar_vec);
 %response shifted by 160 
 %Produce first order transfer function as output
 s = tf('s');
-TF = -(max_val-min_val)*(4/(600*s+4));
+% TF = -(max_val-min_val)*(4/(600*s+4)); %this one is like the reference
+% ^^ just changed the value for steady state and simplified the transfer
+% func
+
+%need to adjust poles...
+% TF = -(max_val-min_val)*(4/(minLOCS(1)*s+4))%this one drops too early
+% TF = -(max_val-min_val)*(4/((600*s+4)*(600*s-4))); %not good haha
+wn = 1.8/(minLOCS(1)/2.5); %~0.0054
+damp = 0.9;
+TF = -(max_val-min_val)*((wn^2)/( (s^2) + (2*wn*damp*s) + (wn^2))); 
+%^^ works okay for some things (better than ref) 
+% except when second oscillation is quite large
 
 %Produce initial condition (offset from zero)
-IC = max_val;
-
-%notes: steady state value = min, initial value/offset = max, 
-%atm my first order system is as accurate as the reference but basically
-%the same as it.
-%A second order system should make it more accurate.
+IC = max_val; %changed the start value to the max value
 
 end
