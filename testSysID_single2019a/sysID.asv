@@ -25,7 +25,7 @@ minPKS = -minPKS;
 min_val = min(sugar_vec);
 max_val = max(sugar_vec);
 %Find steady state value
-steady = sugar_vec(end)
+steady = sugar_vec(end);
 
 %In the example we ignore the peaks, min and max and just output a first order 
 %response shifted by 160 
@@ -52,10 +52,10 @@ s = tf('s');
 
 
 % OS
-os = (minPKS(1) - steady)/steady;
+OS = abs((minPKS(1)-steady)/steady);
 
 %time of first peak (in our case a local minima)
-tp = minLOCS(1);
+tp = minLOCS(1)
 
 %ts = +-2%
 ts = 0;
@@ -64,29 +64,50 @@ for i = 0:length(tsarray)-1
     i_rev = length(tsarray)-i;
     if(tsarray(i_rev) == 0)
         if (i_rev>ts)
-            ts = i_rev; 
+            ts = i_rev
         end
     end
 end
 
-% tr = %10-90%
-b = 0; a = 0;
-val90 = (max_val - steady)*0.1;
-val10 = (max_val - steady)*0.9;
-t10 = find(sugar_vec(sugar_vec<val10), 1, 'first')
-t90 = find(sugar_vec(sugar_vec<val90), 1, 'first')
-tr = t90-t10
+val90 = (steady) +(max_val - steady)*0.1;
+val10 = (steady) +(max_val - steady)*0.9;
+array90 = logical(sugar_vec<val90);
+array10 = logical(sugar_vec<val10);
+t10 = find(array10, 1, 'first');
+t90 = find(array90, 1, 'first');
+tr = (t90-t10)*1.6;
 
-wn =
+damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.84;
+% wn = (pi/tp)/sqrt(1-damp); 
+%failed attempt
+wn = (pi/tp) / (sqrt(1-damp^2));
+%when the first minimum is less than the steady state (i.e. it did the
+%opposite of overshoot)
+if (minPKS(1)-3) > steady
+    damp = 0.95
+    wn = ( (pi/tp) / (sqrt(1-damp^2)) )*0.5
+    a = 0
+elseif maxPKS(2)>(steady+3)
+    damp = 0.8
+    wn = (pi/tp) / (sqrt(1-damp^2))
+    a = 1
+end
+
+
+
+% wn = 1.8/tr;
+% damp = 4/(wn*ts)
 
 % % stepinfo(sugar_vec, time_vec);
 
-% % wn = 1.8/(minLOCS(1)/2.5); %~0.0054
-% % damp = 0.9;
-% % TF = -(max_val-steady)*((wn^2)/( (s^2) + (2*wn*damp*s) + (wn^2))); 
+% wn = 1.8/(minLOCS(1)/2.5) %~0.0054
+% damp = 0.9;
 % % %^^ works okay for some things (better than ref) 
 % % % except when second oscillation is quite large
 % % %or if steady state difference is small
+
+TF = (wn^2 + 10^(-10)) / ( (s^2) + (2*wn*damp*s) + (wn^2)); 
+TF = TF * -(max_val - steady-1);
 
 %Produce initial condition (offset from zero)
 IC = max_val; %changed the start value to the max value

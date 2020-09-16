@@ -52,7 +52,7 @@ s = tf('s');
 
 
 % OS
-OS = abs((max_val - steady)/steady);
+OS = abs((minPKS(1)-steady)/steady);
 
 %time of first peak (in our case a local minima)
 tp = minLOCS(1);
@@ -64,30 +64,52 @@ for i = 0:length(tsarray)-1
     i_rev = length(tsarray)-i;
     if(tsarray(i_rev) == 0)
         if (i_rev>ts)
-            ts = i_rev; 
+            ts = i_rev;
         end
     end
 end
 
-val90 = (max_val - steady)*0.1;
-val10 = (max_val - steady)*0.9;
-t10 = find(sugar_vec(sugar_vec<val10), 1, 'first');
-t90 = find(sugar_vec(sugar_vec<val90), 1, 'first');
-tr = t90-t10;
+val90 = (steady) +(max_val - steady)*0.1;
+val10 = (steady) +(max_val - steady)*0.9;
+array90 = logical(sugar_vec<val90);
+array10 = logical(sugar_vec<val10);
+t10 = find(array10, 1, 'first');
+t90 = find(array90, 1, 'first');
+tr = (t90-t10)*1.6;
 
-% damp = log(OS)/sqrt( pi^2 + log(OS)^2 );
+damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.84;
 % wn = (pi/tp)/sqrt(1-damp); 
 %failed attempt
+wn = (pi/tp) / (sqrt(1-damp^2));
+%when the first minimum is less than the steady state (i.e. it did the
+%opposite of overshoot)
+if (minPKS(1)-3) > steady
+    damp = 0.95;
+    wn = ( (pi/tp) / (sqrt(1-damp^2)) )*0.43;
+    a = 0
+elseif length(maxPKS)>1
+    if maxPKS(2)>(steady+3)
+        damp = 0.8;
+        wn = ((pi/tp) / (sqrt(1-damp^2)))*0.95;
+        a = 1
+    end
+end
+
+
+
+% wn = 1.8/tr;
+% damp = 4/(wn*ts)
 
 % % stepinfo(sugar_vec, time_vec);
 
-wn = 1.8/(minLOCS(1)/2.5); %~0.0054
-damp = 0.9;
+% wn = 1.8/(minLOCS(1)/2.5) %~0.0054
+% damp = 0.9;
 % % %^^ works okay for some things (better than ref) 
 % % % except when second oscillation is quite large
 % % %or if steady state difference is small
 
-TF = -(max_val-steady)*((wn^2)/( (s^2) + (2*wn*damp*s) + (wn^2))); 
+TF = (wn^2 + 10^(-10)) / ( (s^2) + (2*wn*damp*s) + (wn^2)); 
+TF = TF * -(max_val - steady-1);
 
 %Produce initial condition (offset from zero)
 IC = max_val; %changed the start value to the max value
