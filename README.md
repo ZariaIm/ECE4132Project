@@ -13,3 +13,6 @@ Meeting #2: Saturday 3pm
 - Update 
 - Found a solution that works as good as the reference
 - Need to find 2nd order parameters that work better than reference in all cases
+
+Meeting #3: Wednesday 4pm
+- Need to find the Trise, Tpeak, Tsettle and %OS parameters in order to identify wn and damping ratio
