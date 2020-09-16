@@ -35,39 +35,22 @@ s = tf('s');
 % ^^ just changed the value for steady state and simplified the transfer
 % func
 
-% % % Rise Time Tr
-% % % : the time required for the waveform to go
-% % % from 0.1 to 0.9 of the final value
-% % % I Peak Time Tp: the time required to reach the first, or
-% % % maximum, peak.
-% % % I Peak value Mp: The magnitude value at the first, or
-% % % maximum, peak.
-% % % I Percent Overshoot, %OS: The amount that the waveform
-% % % overshoots the steady-state, or final value at the peak
-% % % value, expressed as a percentage of the steady-state value.
-% % % I Settling Time Ts
-% % % : the time required for the transient’s
-% % % damped oscillations to reach and stay within ±2% of the
-% % % steady-state value
-
-
 % OS
 os = (minPKS - steady)/steady
-%time of first peak (in our case a local minima)
 tp = minLOCS(1)
 %ts = +-2%
-ts = 0;
 tsarray = logical((steady-0.02*steady)<sugar_vec & sugar_vec<(steady+0.02*steady));
 for i = 0:length(tsarray)-1
     i_rev = length(tsarray)-i;
     if(tsarray(i_rev) == 0)
-        if (i_rev>ts)ts = i_rev; end
+        n = n+1;
+        save = i_rev;
+        ts = 
     end
 end
+
 % tr = %10-90%
-
-
-stepinfo(sugar_vec, time_vec);
+stepinfo(sugar_vec, time_vec)
 
 wn = 1.8/(minLOCS(1)/2.5); %~0.0054
 damp = 0.9;

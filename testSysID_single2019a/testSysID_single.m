@@ -1,4 +1,5 @@
 clearvars;
+close all;
 
 % prepare input signal
 [time_vec, Food, InsulinRate] = inputVector();
