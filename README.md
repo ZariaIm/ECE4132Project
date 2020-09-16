@@ -16,3 +16,8 @@ Meeting #2: Saturday 3pm
 
 Meeting #3: Wednesday 4pm
 - Need to find the Trise, Tpeak, Tsettle and %OS parameters in order to identify wn and damping ratio
+
+Notes: 17/9 4am
+in my file the parameters for the model I've calculated using matlab = min-val, max-val, peaks (both min and max and their times), steady state value, overshoot, peak time, settle time, rise time.
+from these I picked some damp and natural frequency (wn) values that i was testing. I've commited them to github. 
+due to some difficulties with almost like different cases of action (my test results for each case is recorded in git as well) I tested each one at least 10 times 

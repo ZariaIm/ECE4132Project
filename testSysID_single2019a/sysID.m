@@ -90,7 +90,7 @@ if (minPKS(1)-3) > steady
 elseif length(maxPKS)>1
     if maxPKS(2)>(steady+3)
         damp = 0.8;
-        wn = ((pi/tp) / (sqrt(1-damp^2)))*0.95;
+        wn = ((pi/tp) / (sqrt(1-damp^2)))*0.9;
         a = 1
     end
 end
@@ -109,7 +109,7 @@ end
 % % %or if steady state difference is small
 
 TF = (wn^2 + 10^(-10)) / ( (s^2) + (2*wn*damp*s) + (wn^2)); 
-TF = TF * -(max_val - steady-1);
+TF = TF * -(max_val - steady);
 
 %Produce initial condition (offset from zero)
 IC = max_val; %changed the start value to the max value
