@@ -25,7 +25,7 @@ minPKS = -minPKS;
 min_val = min(sugar_vec);
 max_val = max(sugar_vec);
 %Find steady state value
-steady = sugar_vec(end)
+steady = sugar_vec(end);
 
 %In the example we ignore the peaks, min and max and just output a first order 
 %response shifted by 160 
@@ -52,31 +52,42 @@ s = tf('s');
 
 
 % OS
-os = (minPKS - steady)/steady
+OS = abs((max_val - steady)/steady);
+
 %time of first peak (in our case a local minima)
-tp = minLOCS(1)
+tp = minLOCS(1);
+
 %ts = +-2%
 ts = 0;
 tsarray = logical((steady-0.02*steady)<sugar_vec & sugar_vec<(steady+0.02*steady));
 for i = 0:length(tsarray)-1
     i_rev = length(tsarray)-i;
     if(tsarray(i_rev) == 0)
-        if (i_rev>ts)ts = i_rev; end
+        if (i_rev>ts)
+            ts = i_rev; 
+        end
     end
 end
-% tr = %10-90%
 
+val90 = (max_val - steady)*0.1;
+val10 = (max_val - steady)*0.9;
+t10 = find(sugar_vec(sugar_vec<val10), 1, 'first');
+t90 = find(sugar_vec(sugar_vec<val90), 1, 'first');
+tr = t90-t10;
 
-stepinfo(sugar_vec, time_vec);
+% damp = log(OS)/sqrt( pi^2 + log(OS)^2 );
+% wn = (pi/tp)/sqrt(1-damp); 
+%failed attempt
+
+% % stepinfo(sugar_vec, time_vec);
 
 wn = 1.8/(minLOCS(1)/2.5); %~0.0054
 damp = 0.9;
-%wn and damp based on tr and os?
+% % %^^ works okay for some things (better than ref) 
+% % % except when second oscillation is quite large
+% % %or if steady state difference is small
 
 TF = -(max_val-steady)*((wn^2)/( (s^2) + (2*wn*damp*s) + (wn^2))); 
-%^^ works okay for some things (better than ref) 
-% except when second oscillation is quite large
-%or if steady state difference is small
 
 %Produce initial condition (offset from zero)
 IC = max_val; %changed the start value to the max value
