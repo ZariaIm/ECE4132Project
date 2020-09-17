@@ -80,19 +80,45 @@ tr = (t90-t10)*1.6;
 damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.84;
 % wn = (pi/tp)/sqrt(1-damp); 
 %failed attempt
-wn = (pi/tp) / (sqrt(1-damp^2));
+wn = (pi/(tp*1.1)) / (sqrt(1-damp^2));
 %when the first minimum is less than the steady state (i.e. it did the
 %opposite of overshoot)
-if (minPKS(1)-3) > steady
+
+TF = (wn^2 + 10^(-10)) / (( (s^2) + (2*wn*damp*s) + (wn^2))); 
+
+TF = TF * -(max_val - steady);
+
+if (minPKS(1)-1) > steady
+    %new pole
+     p = 1.75;
     damp = 0.95;
-    wn = ( (pi/tp) / (sqrt(1-damp^2)) )*0.43;
+    wn = ( (pi/(tp)) / (sqrt(1-damp^2)) )*0.43;
+    
+   
+    TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
+    TF = TF * -1.745*(max_val - steady);
     a = 0
+    
 elseif length(maxPKS)>1
-    if maxPKS(2)>(steady+3)
-        damp = 0.8;
+    
+    if maxPKS(2)>(steady+1)
+%         new pole
+        p = 1.;
+        damp = 0.7;
         wn = ((pi/tp) / (sqrt(1-damp^2)))*0.9;
+        
+        TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
+        TF = TF * -1*(max_val - steady);
         a = 1
     end
+elseif length(minPKS) < 2
+        damp = 1;
+        wn = ((pi/tp) / (sqrt(1-damp^2)))*1.2;
+        
+        TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))); 
+        TF = TF * -1*(max_val - steady);
+        a = 2
+
 end
 
 
@@ -108,8 +134,6 @@ end
 % % % except when second oscillation is quite large
 % % %or if steady state difference is small
 
-TF = (wn^2 + 10^(-10)) / ( (s^2) + (2*wn*damp*s) + (wn^2)); 
-TF = TF * -(max_val - steady);
 
 %Produce initial condition (offset from zero)
 IC = max_val; %changed the start value to the max value
