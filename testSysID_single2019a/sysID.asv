@@ -86,31 +86,37 @@ wn = (pi/(tp*1.1)) / (sqrt(1-damp^2));
 
 TF = (wn^2 + 10^(-10)) / (( (s^2) + (2*wn*damp*s) + (wn^2))); 
 
+TF = TF * -(max_val - steady);
 
 if (minPKS(1)-1) > steady
     %new pole
-     p = 1.
-    damp = 0.65;
-    wn = ( (pi/tp) / (sqrt(1-damp^2)) );
+     p = damp*wn;
+    damp = 0.95;
+    wn = ( (pi/(tp)) / (sqrt(1-damp^2)) );
     
    
-    TF = (wn^2 + 10^(-10)) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
-
+    TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
+    TF = TF * -p*(max_val - steady);
     a = 0
     
 elseif length(maxPKS)>1
     
     if maxPKS(2)>(steady+1)
-%         new pole
-        p = 100*damp*wn
-        damp = 0.8;
-        wn = ((pi/tp) / (sqrt(1-damp^2)))*0.9;
-        
-        TF = (wn^2 + 10^(-10)) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
-
-        a = 1
-    end
+%         %new pole
+     p = damp*wn;
+    TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
+    TF = TF * -p*(max_val - steady);
+    a = 0
     
+    end
+elseif length(minPKS) < 2
+        %new pole
+     p = damp*wn;
+    TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
+    TF = TF * -p*(max_val - steady);
+    a = 0
+    
+
 end
 
 
@@ -126,7 +132,6 @@ end
 % % % except when second oscillation is quite large
 % % %or if steady state difference is small
 
-TF = TF * -(max_val - steady);
 
 %Produce initial condition (offset from zero)
 IC = max_val; %changed the start value to the max value

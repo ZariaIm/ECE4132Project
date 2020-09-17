@@ -90,34 +90,30 @@ TF = TF * -(max_val - steady);
 
 if (minPKS(1)-1) > steady
     %new pole
-     p = 1.75;
-    damp = 0.95;
-    wn = ( (pi/(tp)) / (sqrt(1-damp^2)) )*0.43;
-    
-   
+    wn = wn*2.5;
+    damp = damp;
+     p = damp*wn*0.5;
     TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
-    TF = TF * -1.745*(max_val - steady);
+    TF = TF * -p*(max_val - steady);
     a = 0
     
 elseif length(maxPKS)>1
     
     if maxPKS(2)>(steady+1)
-%         new pole
-        p = 1.;
-        damp = 0.7;
-        wn = ((pi/tp) / (sqrt(1-damp^2)))*0.9;
-        
-        TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
-        TF = TF * -1*(max_val - steady);
-        a = 1
+%         %new pole
+     p = damp*wn;
+    TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
+    TF = TF * -p*(max_val - steady);
+    a = 0
+    
     end
-elseif length(minPKS) < 2
-        damp = 1;
-        wn = ((pi/tp) / (sqrt(1-damp^2)))*1.2;
-        
-        TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))); 
-        TF = TF * -1*(max_val - steady);
-        a = 2
+elseif length(minPKS) < 2 || length(maxPKS) <2
+        %new pole
+     p = damp*wn;
+    TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
+    TF = TF * -p*(max_val - steady);
+    a = 0
+    
 
 end
 
