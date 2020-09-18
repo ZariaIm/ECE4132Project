@@ -6,7 +6,7 @@ close all;
 
 % Generate a new random patient and simulate the open loop response of the
 % generated patient
-% patient = genPatient();
+patient = genPatient();
 
 % Simulate the actual patient, then interpolate since Simulink does not
 % guarantee Sugar.Time will equal time_vec
