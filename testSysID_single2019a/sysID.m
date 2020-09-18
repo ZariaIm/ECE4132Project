@@ -21,16 +21,14 @@ sugar_vec = interp1(Sugar.Time,Sugar.Data,time_vec,'linear');
 [minPKS,minLOCS] = findpeaks(-sugar_vec,time_vec);
 minPKS = -minPKS; 
 
-%Find the min and max 
-% min_val = min(sugar_vec);
+%Find the max 
 max_val = max(sugar_vec);
 %Find steady state value
 steady = sugar_vec(end);
 s = tf('s');
 
 if length(minPKS)<1
-    type = 4;
-    damp = 8;
+    damp = 7.5;
     wn = 2;
     a = 4/570;
 else
@@ -39,29 +37,22 @@ else
     OS = (steady-minPKS(1))/steady;
     %time of first peak (in our case a local minima)
     tp = minLOCS(1);
-
         damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.8;
         wn = (pi/tp) / (sqrt(1-damp^2))*0.85;    
         a = wn*damp*steady*0.33;
 
     if OS < 0 || minLOCS(1)>600
-        damp = 8;
+        damp = 7.5;
         wn = 2;
         a = 4/570;
-        type = 1;
     elseif length(maxPKS)>1
-        type = 0;
         if maxPKS(2)>(steady+1)
         damp = 0.85;
         wn = 0.75*(pi/tp) / (sqrt(1-damp^2));
         a = wn*damp*steady;
-        type = 2;
         end
-    else
-        type = 0;
     end
-    end
-    type
+end
     %Transfer function that is used for all 'types' of systems
     TF = -(max_val - steady)*a*(wn^2 + 10^(-10)) / ((s+a)*( (s^2) + (2*wn*damp*s) + (wn^2))); 
     %Produce initial condition (offset from zero)

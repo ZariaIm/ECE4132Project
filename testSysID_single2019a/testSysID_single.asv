@@ -1,4 +1,4 @@
-clearvars;
+% clearvars;
 close all;
 
 % prepare input signal
@@ -14,7 +14,7 @@ Sugar = openLoopSim(patient,Food,InsulinRate);
 sugar_vec = interp1(Sugar.Time,Sugar.Data,time_vec,'linear');
 
 % Simulate the open loop response of the system id process
-[TF,IC] = sysID(patient);
+[TF,IC, type] = sysID(patient);
 Y = step(TF,time_vec);
 id_resp = Y+IC;
 
@@ -34,7 +34,13 @@ rmseFct = @(x, y) sqrt(sum((normVector(x - y)).^2)/(size(x, 1)));
 rmse_id = rmseFct(patient_sugar_resp, id_sugar_resp);
 rmse_ref = rmseFct(patient_sugar_resp, ref_sugar_resp);
 
+e = 0;
+if rmse_id>rmse_ref
+   e = e+ 1;
+   switch(type) 
+       case 
+end
+
+
 plotSysId(time, patient_sugar_resp, ref_sugar_resp, id_sugar_resp, rmse_id, rmse_ref);
 
-pzmap(patient_sugar_resp, time)
-pzmap(
