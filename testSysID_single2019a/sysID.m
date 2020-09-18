@@ -60,13 +60,13 @@ end
     a = wn*damp*steady*0.33;
 %when the first minimum is less than the steady state (i.e. it did the
 %opposite of overshoot)
-if (minPKS(1)-3) > steady
-    damp = 1;
+if (minPKS(1)) > (steady+1)
+    damp = 5;
     wn = 2;
     a = 4/570;
     type = 1
 elseif length(maxPKS)>1
-    if maxPKS(2)>(steady+3)
+    if maxPKS(2)>(steady+1)
     damp = 0.85;
     wn = 0.75*(pi/tp) / (sqrt(1-damp^2));
     a = wn*damp*steady;
