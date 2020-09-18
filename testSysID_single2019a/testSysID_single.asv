@@ -1,4 +1,4 @@
-% clearvars;
+clearvars;
 close all;
 
 % prepare input signal
@@ -6,7 +6,7 @@ close all;
 
 % Generate a new random patient and simulate the open loop response of the
 % generated patient
-% patient = genPatient();
+patient = genPatient();
 
 % Simulate the actual patient, then interpolate since Simulink does not
 % guarantee Sugar.Time will equal time_vec
@@ -36,3 +36,5 @@ rmse_ref = rmseFct(patient_sugar_resp, ref_sugar_resp);
 
 plotSysId(time, patient_sugar_resp, ref_sugar_resp, id_sugar_resp, rmse_id, rmse_ref);
 
+pzmap(patient_sugar_resp, time)
+pzmap(

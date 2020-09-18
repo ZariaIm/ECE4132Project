@@ -18,14 +18,14 @@ sugar_vec = interp1(Sugar.Time,Sugar.Data,time_vec,'linear');
 %% system identification
 %Find the peaks in the data, this is when the slope changes sign
 [maxPKS,maxLOCS] = findpeaks(sugar_vec,time_vec);
-[minPKS,minLOCS] = findpeaks(-sugar_vec,time_vec);
+[minPKS,minLOCS] = findpeaks(-sugar_vec,time_vec)
 minPKS = -minPKS; 
 
 %Find the min and max 
 min_val = min(sugar_vec);
 max_val = max(sugar_vec);
 %Find steady state value
-steady = sugar_vec(end);
+steady = sugar_vec(end)
 
 %In the example we ignore the peaks, min and max and just output a first order 
 %response shifted by 160 
@@ -52,8 +52,8 @@ s = tf('s');
 
 
 % OS
-OS = abs((minPKS(1)-steady)/steady);
-
+OS = (steady-minPKS(1))/steady
+% m = minLOCS(1)/60
 %time of first peak (in our case a local minima)
 tp = minLOCS(1);
 
@@ -69,71 +69,66 @@ for i = 0:length(tsarray)-1
     end
 end
 
-val90 = (steady) +(max_val - steady)*0.1;
-val10 = (steady) +(max_val - steady)*0.9;
-array90 = logical(sugar_vec<val90);
-array10 = logical(sugar_vec<val10);
-t10 = find(array10, 1, 'first');
-t90 = find(array90, 1, 'first');
-tr = (t90-t10)*1.6;
+% val90 = (steady) +(max_val - steady)*0.1;
+% val10 = (steady) +(max_val - steady)*0.9;
+% array90 = logical(sugar_vec<val90);
+% array10 = logical(sugar_vec<val10);
+% t10 = find(array10, 1, 'first');
+% t90 = find(array90, 1, 'first');
+% tr = (t90-t10)*1.6;
 
-damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.84;
-% wn = (pi/tp)/sqrt(1-damp); 
-%failed attempt
-wn = (pi/(tp*1.1)) / (sqrt(1-damp^2));
-%when the first minimum is less than the steady state (i.e. it did the
-%opposite of overshoot)
 
-TF = (wn^2 + 10^(-10)) / (( (s^2) + (2*wn*damp*s) + (wn^2))); 
+% % damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 ));
+% % % wn = (pi/(tp)) / (sqrt(1-damp^2));
+% % wn = 1.8/tr;
+% % 
+% %     damp = damp;
+% %     wn = wn;
+% % %     p = damp*wn;
+    scale = -(max_val - steady-1);
+% %     
+% %     sigd = damp*wn*1.4;
+% %     omegd = sqrt(1-damp^2)*(10^-2);
+% %     tp = pi/omegd;
 
-TF = TF * -(max_val - steady);
-
-if (minPKS(1)-1) > steady
-    %new pole
-     p = damp*wn;
-    damp = 0.95;
-    wn = ( (pi/(tp)) / (sqrt(1-damp^2)) );
-    
-   
-    TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
-    TF = TF * -p*(max_val - steady);
-    a = 0
-    
-elseif length(maxPKS)>1
-    
-    if maxPKS(2)>(steady+1)
-%         %new pole
-     p = damp*wn;
-    TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
-    TF = TF * -p*(max_val - steady);
-    a = 0
-    
+%     if min_val == steady
+%         a = 0
+% % %         OS = 10^-15;
+% %         damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) *0.3
+% %         wn = ((pi/tp) / (sqrt(1-damp^2)))*2.55;
+% %         p = wn*damp;
+% %         TF = p*scale*(wn^2) / ( ((s^2) + (2*wn*damp*s) + (wn^2))*(s+p));
+        
+        
+    if OS < 0
+         a = 1
+%         damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 ))
+%         wn = ((pi/tp) / (sqrt(1-damp^2)));
+%         p = wn*damp*0.2
+%         z = 0.007*minLOCS(1)
+%         p1 = z*1.1;
+%         TF = p*scale*(s+z)*(wn^2)/ (((s + p1)^2)*(s+p)*((s^2) + (2*wn*damp*s) + (wn^2)));
+            TF = scale*(4/(550*s+4));
+            figure;
+            pzplot(TF)
+%          tp = minLOCS(2);
+% %          OS = 10^-15;
+%         OS = minLOCS(1)*10^-7;
+%         damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 ));
+%         wn = ((pi/tp) / (sqrt(1-damp^2)))*1.1;
+%         TF = scale*(wn^2 + 10^(-10)) / ( (s^2) + (2*wn*damp*s) + (wn^2));
+    else
+        a = 2
+        if minLOCS(1)> 600
+            tp = tp/2
+        end
+        damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.85;
+        wn = (pi/tp) / (sqrt(1-damp^2));
+        TF = scale*(wn^2 + 10^(-10)) / ( (s^2) + (2*wn*damp*s) + (wn^2)); 
     end
-elseif length(minPKS) < 2
-        %new pole
-     p = damp*wn;
-    TF = (wn^2) / (( (s^2) + (2*wn*damp*s) + (wn^2))*(s+p)); 
-    TF = TF * -p*(max_val - steady);
-    a = 0
     
-
-end
-
-
-
-% wn = 1.8/tr;
-% damp = 4/(wn*ts)
-
-% % stepinfo(sugar_vec, time_vec);
-
-% wn = 1.8/(minLOCS(1)/2.5) %~0.0054
-% damp = 0.9;
-% % %^^ works okay for some things (better than ref) 
-% % % except when second oscillation is quite large
-% % %or if steady state difference is small
-
-
 %Produce initial condition (offset from zero)
 IC = max_val; %changed the start value to the max value
+
 
 end
