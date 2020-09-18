@@ -17,37 +17,52 @@ sugar_vec = interp1(Sugar.Time,Sugar.Data,time_vec,'linear');
 
 %% system identification
 %Find the peaks in the data, this is when the slope changes sign
-[maxPKS,maxLOCS] = findpeaks(sugar_vec,time_vec);
-[minPKS,minLOCS] = findpeaks(-sugar_vec,time_vec);
+[maxPKS,maxLOCS] = findpeaks(sugar_vec,time_vec)
+[minPKS,minLOCS] = findpeaks(-sugar_vec,time_vec)
 minPKS = -minPKS; 
+if length(minPKS)>1
+else
 %Find the min and max 
-min_val = min(sugar_vec);
+% min_val = min(sugar_vec);
 max_val = max(sugar_vec);
 %Find steady state value
 steady = sugar_vec(end);
-%In the example we ignore the peaks, min and max and just output a first order 
-%response shifted by 160 
 s = tf('s');
-% TF = -(max_val-min_val)*(4/(600*s+4)); %this one is like the reference
-% ^^ just changed the value for steady state and simplified the transfer
-% func
 % OS
-OS = (steady-minPKS(1))/steady;
-% m = minLOCS(1)/60
+OS = (steady-minPKS(1))/steady
 %time of first peak (in our case a local minima)
 tp = minLOCS(1);
-%ts = +-2%
-ts = 0;
-tsarray = logical((steady-0.02*steady)<sugar_vec & sugar_vec<(steady+0.02*steady));
-for i = 0:length(tsarray)-1
-    i_rev = length(tsarray)-i;
-    if(tsarray(i_rev) == 0)
-        if (i_rev>ts)
-            ts = i_rev;
-        end
-    end
-end
 
+    damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.8;
+    wn = (pi/tp) / (sqrt(1-damp^2))*0.85;    
+    a = wn*damp*steady*0.33;
+    
+if OS < 0 || minLOCS(1)>600
+    damp = 8;
+    wn = 2;
+    a = 4/570;
+    type = 1;
+elseif length(maxPKS)>1
+    type = 0;
+    if maxPKS(2)>(steady+1)
+    damp = 0.85;
+    wn = 0.75*(pi/tp) / (sqrt(1-damp^2));
+    a = wn*damp*steady;
+    type = 2;
+    end
+else
+    type = 0;
+end
+type
+%Transfer function that is used for all 'types' of systems
+TF = -(max_val - steady)*a*(wn^2 + 10^(-10)) / ((s+a)*( (s^2) + (2*wn*damp*s) + (wn^2))); 
+%Produce initial condition (offset from zero)
+IC = max_val; %changed the start value to the max value
+
+end
+end
+%Useless Code
+% 
 % val90 = (steady) +(max_val - steady)*0.1;
 % val10 = (steady) +(max_val - steady)*0.9;
 % array90 = logical(sugar_vec<val90);
@@ -55,35 +70,15 @@ end
 % t10 = find(array10, 1, 'first');
 % t90 = find(array90, 1, 'first');
 % tr = (t90-t10)*1.6;
-
-%when the first minimum is less than the steady state (i.e. it did the
-%opposite of overshoot)
-if (minPKS(1)-3) > steady
-    damp = 1;
-    wn = 4;
-    a = 4/570;
-    type = 1
-elseif length(maxPKS)>1
-    if maxPKS(2)>(steady+3)
-    damp = 0.8
-    wn = (pi/tp) / (sqrt(1-damp^2))
-    a = wn*damp*steady;
-    type = 2
-    end
-else
-    type = 0
-    a = wn*damp*steady;
-    damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.84;
-    wn = (pi/tp) / (sqrt(1-damp^2));    
-end
-
-
-TF = a*(wn^2 + 10^(-10)) / ((s+a)*( (s^2) + (2*wn*damp*s) + (wn^2))); 
-TF = TF * -(max_val - steady);
-figure;
-pzplot(TF)
-%Produce initial condition (offset from zero)
-IC = max_val; %changed the start value to the max value
-
-
-end
+% 
+%ts = +-2%
+% ts = 0;
+% tsarray = logical((steady-0.02*steady)<sugar_vec & sugar_vec<(steady+0.02*steady));
+% for i = 0:length(tsarray)-1
+%     i_rev = length(tsarray)-i;
+%     if(tsarray(i_rev) == 0)
+%         if (i_rev>ts)
+%             ts = i_rev;
+%         end
+%     end
+% end
