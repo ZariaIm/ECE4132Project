@@ -21,8 +21,9 @@ sugar_vec_closeloop = interp1(Sugar_closeloop.Time,Sugar_closeloop.Data,time_vec
 s = tf('s');
 % Controller = tf(-1/((s+4)*(s+1)));
 
-kp = 0.4; %proportion
-Controller = tf(-(s*kp)/s);
+kp = 1; %proportion
+ki = 0.001; %integral
+Controller = -(s*kp + ki)/s;
 end
 
 function [TF, IC] = sysID(patient) % update this function as appropriate
