@@ -6,7 +6,7 @@ function Controller = ctrlDesign(patient, time_vec, Food)
 % The input response is loaded here and used to simulate the patient to produce 
 % the step response. Feel free to alter this section as needed to try different
 % types of inputs that may help with the identification process
-[TF,IC] = sysID(patient); % REPLACE THIS FUNCTION (AT THE BOTTOM) WITH YOURS
+[TF,IC] = sysID(patient) % REPLACE THIS FUNCTION (AT THE BOTTOM) WITH YOURS
 
 %% system identification (close loop sim)
 % Simulate the open loop response of the generated patient
@@ -18,8 +18,22 @@ Sugar_closeloop = closedLoopSim(patient,Food,Controller);
 sugar_vec_closeloop = interp1(Sugar_closeloop.Time,Sugar_closeloop.Data,time_vec,'linear');
 
 %% controller design
+%250,150,1 gave good results once
+%so far it doesn't like zeros
+Kp=250;
+Ki=100;
+Kd=1;
 s = tf('s');
-Controller = (-0/(s+2));
+
+% Controller = -1/(Kp+(Ki*(1/s))+(Kd*s));
+Controller = tf(-1/(s+2));
+%Controller = (-1/(s+IC));
+% Controller = TF; %redundant
+
+
+%Controller = 1/(Kp+(Ki*(1/s^2))+(Kd*s))
+%Controller = (Kp+(Ki*(1/s))+(Kd*s))  %doesnt work but it should have 
+%(-0/(s+2));
 end
 
 function [TF, IC] = sysID(patient)
@@ -78,29 +92,8 @@ else
     end
 end
     %Transfer function that is used for all 'types' of systems
-    TF = -(max_val - steady)*a*(wn^2 + 10^(-10)) / ((s+a)*( (s^2) + (2*wn*damp*s) + (wn^2))); 
+    TF = -(max_val - steady)*a*(wn^2 + 10^(-10)) / ((s+a)*( (s^2) + (2*wn*damp*s) + (wn^2)))
     %Produce initial condition (offset from zero)
-    IC = max_val; %changed the start value to the max value
+    IC = max_val %changed the start value to the max value
 
 end
-%Useless Code
-% 
-% val90 = (steady) +(max_val - steady)*0.1;
-% val10 = (steady) +(max_val - steady)*0.9;
-% array90 = logical(sugar_vec<val90);
-% array10 = logical(sugar_vec<val10);
-% t10 = find(array10, 1, 'first');
-% t90 = find(array90, 1, 'first');
-% tr = (t90-t10)*1.6;
-% 
-%ts = +-2%
-% ts = 0;
-% tsarray = logical((steady-0.02*steady)<sugar_vec & sugar_vec<(steady+0.02*steady));
-% for i = 0:length(tsarray)-1
-%     i_rev = length(tsarray)-i;
-%     if(tsarray(i_rev) == 0)
-%         if (i_rev>ts)
-%             ts = i_rev;
-%         end
-%     end
-% end

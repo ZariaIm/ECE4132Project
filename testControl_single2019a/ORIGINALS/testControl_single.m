@@ -7,8 +7,8 @@ peak_dangerous(2) = 16.6*18; % convert mmol/l to mg/dl
 patient = genPatient();
 
 % comment whichever appropriate one as needed 
-[time_vec, food] = foodVector_fasting(); % simulate fasting response
-% [time_vec, food] = foodVector_3meals(); % simulate 3 meals
+% [time_vec, food] = foodVector_fasting(); % simulate fasting response
+[time_vec, food] = foodVector_3meals(); % simulate 3 meals
 
 %Create a Controller
 Controller = ctrlDesign(patient, time_vec, food);
@@ -21,4 +21,3 @@ patient_sugar_resp = Sugar.Data(:);
 
 %Plot results
 fig = plotCtrlDesign(time, patient_sugar_resp, steadystate_desired, peak_dangerous);
-xlim([0 24])
