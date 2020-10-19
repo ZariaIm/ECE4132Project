@@ -19,10 +19,7 @@ sugar_vec_closeloop = interp1(Sugar_closeloop.Time,Sugar_closeloop.Data,time_vec
 
 %% controller design
 s = tf('s');
-% Controller = tf(-1/((s+4)*(s+1)));
-
-kp = 0.4; %proportion
-Controller = tf(-(s*kp)/s);
+Controller = tf(-0/(s+1));
 end
 
 function [TF, IC] = sysID(patient) % update this function as appropriate
@@ -32,45 +29,11 @@ Sugar = openLoopSim(patient,Food,InsulinRate);
 sugar_vec = interp1(Sugar.Time,Sugar.Data,time_vec,'linear');
 
 %% system identification
-%Find the peaks in the data, this is when the slope changes sign
-[maxPKS,maxLOCS] = findpeaks(sugar_vec,time_vec);
-[minPKS,minLOCS] = findpeaks(-sugar_vec,time_vec);
-minPKS = -minPKS; 
-
-%Find the max 
+[PKS,LOCS] = findpeaks(sugar_vec,time_vec);
+min_val = min(sugar_vec);
 max_val = max(sugar_vec);
-%Find steady state value
-steady = sugar_vec(end);
+
 s = tf('s');
-
-if length(minPKS)<1
-    damp = 7.5;
-    wn = 2;
-    a = 4/570;
-else
-    
-    % OS
-    OS = (steady-minPKS(1))/steady;
-    %time of first peak (in our case a local minima)
-    tp = minLOCS(1);
-        damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.8;
-        wn = (pi/tp) / (sqrt(1-damp^2))*0.85;    
-        a = wn*damp*steady*0.33;
-
-    if OS < 0 || minLOCS(1)>600
-        damp = 7.5;
-        wn = 2;
-        a = 4/570;
-    elseif length(maxPKS)>1
-        if maxPKS(2)>(steady+1)
-        damp = 0.85;
-        wn = 0.75*(pi/tp) / (sqrt(1-damp^2));
-        a = wn*damp*steady;
-        end
-    end
-end
-    %Transfer function that is used for all 'types' of systems
-    TF = -(max_val - steady)*a*(wn^2 + 10^(-10)) / ((s+a)*( (s^2) + (2*wn*damp*s) + (wn^2)))
-    %Produce initial condition (offset from zero)
-    IC = max_val; %changed the start value to the max value
+TF = -80*(4/(10*60))/(s+4/(10*60));
+IC = 160;
 end
