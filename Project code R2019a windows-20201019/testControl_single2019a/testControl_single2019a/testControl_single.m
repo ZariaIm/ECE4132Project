@@ -22,7 +22,7 @@ patient_sugar_resp = Sugar.Data(:);
 %CALCULATE PERCENTAGE
 above = patient_sugar_resp>steadystate_desired(2);
 below = patient_sugar_resp<steadystate_desired(1);
-percentage = floor(((length(above)-nnz(above+below))/length(above))*100)
+percentage = floor(((length(above)-nnz(above+below))/length(above))*100);
 
 %Plot results
 fig = plotCtrlDesign(time, patient_sugar_resp, steadystate_desired, peak_dangerous);
