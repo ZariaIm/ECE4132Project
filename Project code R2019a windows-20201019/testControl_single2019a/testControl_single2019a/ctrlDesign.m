@@ -19,11 +19,10 @@ sugar_vec_closeloop = interp1(Sugar_closeloop.Time,Sugar_closeloop.Data,time_vec
 
 %% controller design
 s = tf('s');
-Controller = tf(-1/((s+5)*(s+0.5)));
-
-% kp = 1; %proportion
-% ki = 0.001; %integral
-% Controller = -(s*kp + ki)/s;
+p1 = -5;
+p2 = -0.5;
+z1 = -1.2;
+Controller = tf( (-(s-z1)) / ((s-p1)*(s-p2)) );
 end
 
 function [TF, IC] = sysID(patient) % update this function as appropriate
@@ -33,45 +32,41 @@ Sugar = openLoopSim(patient,Food,InsulinRate);
 sugar_vec = interp1(Sugar.Time,Sugar.Data,time_vec,'linear');
 
 %% system identification
-%Find the peaks in the data, this is when the slope changes sign
-[maxPKS,maxLOCS] = findpeaks(sugar_vec,time_vec);
-[minPKS,minLOCS] = findpeaks(-sugar_vec,time_vec);
-minPKS = -minPKS; 
-
-%Find the max 
-max_val = max(sugar_vec);
-%Find steady state value
-steady = sugar_vec(end);
+% Produce initial condition (offset from zero)
+IC = sugar_vec(1); %changed the start value to the max value
+% simulate the reference as comparison
 s = tf('s');
+min_val = min(sugar_vec);
+max_val = max(sugar_vec);
+TF_ref = -(max_val-min_val)*(4/(600*s+4));
+Y_ref = step(TF_ref,time_vec);
+ref_resp = Y_ref+IC;
+ref = ref_resp(:);
+sugar = sugar_vec(:);
 
-if length(minPKS)<1
-    damp = 7.5;
-    wn = 2;
-    a = 4/570;
-else
-    
-    % OS
-    OS = (steady-minPKS(1))/steady;
-    %time of first peak (in our case a local minima)
-    tp = minLOCS(1);
-        damp = abs(log(OS)/sqrt( pi^2 + log(OS)^2 )) * 0.8;
-        wn = (pi/tp) / (sqrt(1-damp^2))*0.85;    
-        a = wn*damp*steady*0.33;
+% calculate the rmse of the reference
+rmseFct = @(x, y) sqrt(sum((normVector(x - y)).^2)/(size(x, 1)));
+rmse_ref = rmseFct(sugar, ref);
+% make function handles for the id
+num = @(a) [10*a(1) -0.5*a(2) + 0.0001*a(3) (6e-6)*a(4) (1e-5)*a(5) (5e-9)*a(6) 0];
+den =@(a) [1, (0.0001)*a(7), (5e-7)*a(9), (-3e-7)*a(8) 0 1.782e-15];
+TF_temp =@(a) tf(num(a), den(a));
+id =@(a) (step(TF_temp(a) ,time_vec) + IC);
+rmse_id = @(a) rmseFct(sugar, id(a));
+% solve for the minimum 'a' (5 values) that will result in a minimum
+rmse_ratio = @(a) rmse_id(a)/rmse_ref;
+a = fmincon(rmse_ratio, ones([1,14]));
+%Define final TF
+TF = TF_temp(a);
 
-    if OS < 0 || minLOCS(1)>600
-        damp = 7.5;
-        wn = 2;
-        a = 4/570;
-    elseif length(maxPKS)>1
-        if maxPKS(2)>(steady+1)
-        damp = 0.85;
-        wn = 0.75*(pi/tp) / (sqrt(1-damp^2));
-        a = wn*damp*steady;
-        end
-    end
 end
-    %Transfer function that is used for all 'types' of systems
-    TF = -(max_val - steady)*a*(wn^2 + 10^(-10)) / ((s+a)*( (s^2) + (2*wn*damp*s) + (wn^2)))
-    %Produce initial condition (offset from zero)
-    IC = max_val; %changed the start value to the max value
+
+function normVec = normVector(origMatrix)
+    % calculate the distance vector of a given matrix, into a vector
+	
+    len = size(origMatrix, 1);
+    normVec = zeros(len, 1);
+    for x = 1:len
+        normVec(x) = norm(origMatrix(x, :));
+    end
 end

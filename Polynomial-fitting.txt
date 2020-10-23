@@ -1,0 +1,38 @@
+function [TF, IC] = sysID(patient)
+% Use this template to design an open-loop system identification routine given
+% the step time response of the patient. 
+
+%% input response
+% The input response is loaded here and used to simulate the patient to produce 
+% the step response. Feel free to alter this section as needed to try different
+% types of inputs that may help with the identification process
+[time_vec, Food, InsulinRate] = inputVector();
+
+% Simulate the open loop response of the generated patient
+Sugar = openLoopSim(patient,Food,InsulinRate);
+
+% Get Sugar values at time_vec time. This is basic linear interpolation and
+% is nessesary because Simulink does not guarantee Sugar.Time will equal time_vec
+sugar_vec = interp1(Sugar.Time,Sugar.Data,time_vec,'linear');
+
+%% system ID using polynomial fitting:
+
+% set useful params
+IC = sugar_vec(1);
+
+% extend data with constant final value, so polyfit smoothens at the end
+time = 1:2000;
+order = 7;
+sugar_vec_extended = [sugar_vec, sugar_vec(end)*ones(1,time(end)-time_vec(end)-1)];
+coeffs = polyfit(time, sugar_vec_extended-IC, order);   % fit curve of order n to patient data
+
+% add step response for each term of the polynomial to TF
+TF = 0;
+s = tf('s');
+for i = 1:length(coeffs)
+    s_order = order - i + 1;
+    TF = TF + coeffs(i)*factorial(s_order)/s^s_order; 
+end
+TF = minreal(TF);
+
+end
