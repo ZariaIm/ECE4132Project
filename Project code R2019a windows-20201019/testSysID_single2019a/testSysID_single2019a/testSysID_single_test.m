@@ -38,7 +38,7 @@ ref_sugar_resp = ref_resp(:);
 % Set up anon function for RMSE calculation
 rmseFct = @(x, y) sqrt(sum((normVector(x - y)).^2)/(size(x, 1)));
 rmse_id = rmseFct(patient_sugar_resp, id_sugar_resp);
-rmse_ref = rmseFct(patient_sugar_resp, ref_sugar_resp)
+rmse_ref = rmseFct(patient_sugar_resp, ref_sugar_resp);
 
 %Mark Scheme 
 mark = 10 - 10*(rmse_id /rmse_ref);
